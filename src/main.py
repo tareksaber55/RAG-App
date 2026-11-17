@@ -44,16 +44,16 @@ async def lifespan(app: FastAPI):
     )
 
     app.vectordb_client = VectorDBProviderFactory(settings).create(
-        provider=settings.VECTOR_DB_BACKEND
+        provider=settings.VECTOR_DB_BACKEND,db_client = app.db_client
     )
-    app.vectordb_client.connect()
+    await app.vectordb_client.connect()
 
     app.template_parser = TemplateParser(default_language=settings.DEFAULT_LANGUAGE)
     yield
 
     # Shutdown
     await app.db_engine.dispose()
-    app.vectordb_client.disconnect()
+    await app.vectordb_client.disconnect()
 
 app = FastAPI(lifespan=lifespan)
 

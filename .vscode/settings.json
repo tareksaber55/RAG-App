@@ -4,5 +4,6 @@
     "python.analysis.extraPaths": [
         "./src"
     ],
-    "python.languageServer": "Pylance"
+    "python.languageServer": "Pylance",
+    "python.analysis.autoImportCompletions": true
 }

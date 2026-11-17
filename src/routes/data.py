@@ -1,7 +1,7 @@
 from fastapi import FastAPI,APIRouter,Depends,UploadFile,status,Request
 from fastapi.responses import JSONResponse
 from helpers.config import get_settings,Settings
-from controllers import DataController,ProjectController,ProcessController
+from controllers import DataController,ProjectController,ProcessController,NLPController
 import os
 import aiofiles
 import logging
@@ -96,6 +96,12 @@ async def process_endpoint(request:Request,project_id:int,process_request:Proces
     asset_model = await AssetModel.create_instance(
                 db_client=request.app.db_client
     )
+    nlp_controller = NLPController(
+        vectordb_client=request.app.vectordb_client,
+        generation_client=request.app.generation_client,
+        embedding_client=request.app.embedding_client,
+        template_parser = request.app.template_parser
+    )
     project_files_ids = {}
     if process_request.file_id:
         asset = await asset_model.get_asset_record(
@@ -139,6 +145,7 @@ async def process_endpoint(request:Request,project_id:int,process_request:Proces
     no_processed_files = 0
     if reset:
         _ = await chunk_model.delete_chunks_by_project_id(project_id=project.project_id)
+        await nlp_controller.reset_vector_db_collection(project = project)
     for asset_id,file_id in project_files_ids.items():  
         file_content = process_controller.get_file_content(file_id=file_id)
         if file_content is None:
